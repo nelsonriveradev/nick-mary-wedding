@@ -1,5 +1,5 @@
 export type Photo = {
-  id: string;
+  uid: string;
   url: string;
   caption: string;
   author: string;

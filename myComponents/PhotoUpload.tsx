@@ -1,5 +1,7 @@
 "use client";
 
+import { onAuthStateChanged } from "firebase/auth";
+
 import {
   Card,
   CardContent,
@@ -7,15 +9,36 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useState } from "react";
+import { collection, addDoc } from "firebase/firestore";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CameraIcon, SendIcon } from "lucide-react";
+import { AwardIcon, CameraIcon, SendIcon } from "lucide-react";
+import { auth, db } from "@/lib/firebase";
+import type { Photo } from "@/types";
+import { uploadPhoto } from "@/actions/uploadPhoto";
+import { useRouter } from "next/navigation";
+import type { User as FirebaseUser } from "firebase/auth";
+import { toast } from "sonner";
 
 export default function PhotoUpload() {
   const [previewUrl, setPreviewUrl] = useState<string | null>();
+  const [downloadURL, setDownloadURL] = useState<string>();
+  const [userData, setUserData] = useState<FirebaseUser>();
+  const router = useRouter();
 
+  //check user is authenticated
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push("/sign-up");
+      } else {
+        setUserData(user);
+      }
+    });
+  }, []);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -28,8 +51,40 @@ export default function PhotoUpload() {
   };
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     try {
-    } catch (error) {}
+      e.preventDefault();
+      const formData = new FormData(e.currentTarget);
+      const photoUpload = formData.get("photo") as File;
+      const captionUpload = formData.get("caption") as string;
+
+      // Wrap the upload logic in toast.promise
+      toast.promise(
+        async () => {
+          //first upload to storage
+          const url = await uploadPhoto(photoUpload);
+          setDownloadURL(url);
+          // add upload to firestore
+          const postData: Photo = {
+            uid: userData?.uid!,
+            url: url,
+            caption: captionUpload,
+            author: userData?.displayName!,
+            timestamp: new Date(),
+          };
+          const docRef = await addDoc(collection(db, "posts"), postData);
+          console.log(`Post photo uploaded created... : ${docRef.id}`);
+          return docRef;
+        },
+        {
+          loading: "Uploading photo...",
+          success: "Photo uploaded successfully!",
+          error: "Error uploading photo",
+        }
+      );
+    } catch (error) {
+      console.log(`Error in uploading: ${error}`);
+    }
   }
+
   return (
     <div className="w-2/3 mx-auto">
       <Card>
@@ -37,7 +92,7 @@ export default function PhotoUpload() {
           <CardTitle className="text-xl">Share a Photo</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="flex items-center justify-center w-full">
               <label
                 htmlFor="photo-upload"
@@ -74,7 +129,7 @@ export default function PhotoUpload() {
               <Textarea required name="caption" />
             </div>
             <div className="mx-auto w-1/2">
-              <Button className="w-full text-md">
+              <Button className="w-full text-md" type="submit">
                 Upload{" "}
                 <span>
                   <SendIcon />
