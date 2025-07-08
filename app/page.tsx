@@ -3,8 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CameraIcon, ClipboardCheckIcon, ClockIcon } from "lucide-react";
-import { useRef, useEffect } from "react";
-
+import { useRef, useEffect, useState } from "react";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  DocumentData,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { Post } from "@/types";
 export default function Home() {
   const floatingItemsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -17,6 +25,27 @@ export default function Home() {
       item.style.animationDelay = `${randomDelay}s`;
       item.style.animationDuration = `${randomDuration}s`;
     }
+  }, []);
+  // fetch photos
+
+  const [latestPosts, setLatestPosts] = useState<DocumentData[]>([]);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, "posts")
+      // Optionally, order by a timestamp field, e.g. "createdAt"
+      // orderBy("createdAt", "desc"),
+      // limit(12)
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const postLists: DocumentData[] = [];
+      snapshot.docs.slice(0, 12).forEach((doc) => {
+        const postInfo = doc.data();
+        postLists.push(postInfo);
+        setLatestPosts(postLists);
+      });
+    });
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -37,42 +66,36 @@ export default function Home() {
           </p>
         </div>
         {/* Floating Food Items */}
-        <div ref={floatingItemsRef} className="absolute inset-0 z-0 mx-auto">
-          <div className="animate-bounce absolute w-16 h-16 left-[10%] top-[20%] rounded-lg shadow-lg animate-float">
-            <img
-              src="https://images.unsplash.com/photo-1513442542250-854d436a73f2"
-              alt="Ingredient"
-              className="w-full h-full object-cover rounded-lg"
-            />
-          </div>
-          <div className=" animate-bounce absolute w-20 h-20 left-[20%] bottom-[15%] rounded-lg shadow-lg animate-float">
-            <img
-              src="https://images.unsplash.com/photo-1567306226416-28f0efdc88ce"
-              alt="Ingredient"
-              className="w-full h-full object-cover rounded-lg"
-            />
-          </div>
-          <div className="animate-bounce absolute w-14 h-14 left-[75%] top-[25%] rounded-lg shadow-lg animate-float">
-            <img
-              src="https://images.unsplash.com/photo-1518977676601-b53f82aba655"
-              alt="Ingredient"
-              className="w-full h-full object-cover rounded-lg"
-            />
-          </div>
-          <div className="animate-bounce absolute w-16 h-16 right-[15%] bottom-[30%] rounded-lg shadow-lg animate-float">
-            <img
-              src="https://images.unsplash.com/photo-1615485500704-8e990f9719f4"
-              alt="Ingredient"
-              className="w-full h-full object-cover rounded-lg"
-            />
-          </div>
-          <div className="animate-bounce absolute w-12 h-12 right-[30%] top-[15%] rounded-lg shadow-lg animate-float">
-            <img
-              src="https://images.unsplash.com/photo-1618897996318-5a901fa6ca71"
-              alt="Ingredient"
-              className="w-full h-full object-cover rounded-lg"
-            />
-          </div>
+        <div
+          ref={floatingItemsRef}
+          className="absolute inset-0 z-0 mx-auto overflow-hidden"
+        >
+          {latestPosts.map((p, index) => {
+            // Generate random positions
+            const randomLeft = Math.random() * 80 + 10; // 10% to 90%
+            const randomTop = Math.random() * 60 + 20; // 20% to 80%
+            const randomDelay = Math.random() * 3; // 0 to 3 seconds
+            const randomDuration = 3 + Math.random() * 2; // 3 to 5 seconds
+
+            return (
+              <div
+                key={p.id || index}
+                className="absolute w-16 h-16 rounded-lg shadow-lg animate-bounce"
+                style={{
+                  left: `${randomLeft}%`,
+                  top: `${randomTop}%`,
+                  animationDelay: `${randomDelay}s`,
+                  animationDuration: `${randomDuration}s`,
+                }}
+              >
+                <img
+                  src={p.url}
+                  alt={`${p.author} took a photo in Nick & mariel wedding`}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
       {/* Feature Sections */}

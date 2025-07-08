@@ -11,3 +11,12 @@ export type GuestMessage = {
   message: string;
   timestamp: Date;
 };
+
+export type Post = {
+  id: string;
+  uid: string;
+  url: string;
+  caption: string;
+  author: string;
+  timestamp: Date | string;
+};
