@@ -1,9 +1,9 @@
 "use client";
 
 import PhotoUpload from "@/myComponents/PhotoUpload";
-import { Photo, Post } from "@/types";
+import { Post } from "@/types";
 import { useState, useEffect } from "react";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import PhotoCard from "@/myComponents/PhotoCard";
 

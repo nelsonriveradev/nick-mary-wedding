@@ -6,7 +6,7 @@ export type Photo = {
   timestamp: Date;
 };
 export type GuestMessage = {
-  id: string;
+  uid?: string;
   name: string;
   message: string;
   timestamp: Date;

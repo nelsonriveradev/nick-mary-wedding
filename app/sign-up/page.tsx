@@ -25,7 +25,9 @@ export default function SignUpPage() {
           router.push("/photos");
         }
       });
-    } catch (error) {}
+    } catch (error) {
+      console.log(`Error signing in: ${error}`);
+    }
   }
   toast.promise(handleSignUp, {
     loading: "Signing Up...",

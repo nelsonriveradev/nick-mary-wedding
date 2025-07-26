@@ -7,17 +7,15 @@ import { useRef, useEffect, useState } from "react";
 import {
   collection,
   query,
-  where,
   onSnapshot,
   DocumentData,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { Post } from "@/types";
 export default function Home() {
   const floatingItemsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // Animation for floating food items
-    const floatingItems = floatingItemsRef.current?.children! || [];
+    const floatingItems = floatingItemsRef.current?.children || [];
     for (let i = 0; i < floatingItems.length; i++) {
       const item = floatingItems[i] as HTMLElement;
       const randomDelay = Math.random() * 2;
@@ -61,7 +59,7 @@ export default function Home() {
             September 27, 2025
           </p>
           <p className="text-lg text-gray-600 max-w-xl mx-auto">
-            Welcome to our wedding celebration. We're excited to share this
+            Welcome to our wedding celebration. We&apos;re excited to share this
             special day with you.
           </p>
         </div>
@@ -88,7 +86,9 @@ export default function Home() {
                   animationDuration: `${randomDuration}s`,
                 }}
               >
-                <img
+                <Image
+                  width={100}
+                  height={100}
                   src={p.url}
                   alt={`${p.author} took a photo in Nick & mariel wedding`}
                   className="w-full h-full object-cover rounded-lg"
@@ -162,8 +162,8 @@ export default function Home() {
       <section className="py-12 px-4 sm:px-6 lg:px-8 bg-pink-50">
         <div className="max-w-3xl mx-auto text-center">
           <p className="italic text-lg text-gray-600">
-            "Love is patient, love is kind. It always protects, always trusts,
-            always hopes, always perseveres."
+            &ldquo;Love is patient, love is kind. It always protects, always
+            trusts, always hopes, always perseveres.&rdquo;
           </p>
         </div>
       </section>
