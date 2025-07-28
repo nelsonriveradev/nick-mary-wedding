@@ -4,12 +4,28 @@ import PhotoUpload from "@/myComponents/PhotoUpload";
 import { Post } from "@/types";
 import { useState, useEffect } from "react";
 import { collection, query, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import PhotoCard from "@/myComponents/PhotoCard";
-
+import { onAuthStateChanged, User } from "firebase/auth";
+import { useRouter } from "next/navigation";
 export default function PhotoPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const router = useRouter();
+  const [user, setUser] = useState<User>();
 
+  const [posts, setPosts] = useState<Post[]>([]);
+  //protect page
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      if (u) {
+        setUser(u);
+        console.log(`User logged in: ${user?.displayName}`);
+      } else {
+        router.push("/sign-up");
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
   useEffect(() => {
     async function getAllPost() {
       try {
@@ -41,6 +57,7 @@ export default function PhotoPage() {
       <div className="px-14 grid grid-cols-1 md:grid-cols-3 gap-3">
         {posts.map((p) => (
           <PhotoCard
+            id={p.id}
             uid={p.uid}
             url={p.url}
             caption={p.caption}
